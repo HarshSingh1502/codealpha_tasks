@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="header-inner">
+        <h1>Web Scraper</h1>
+        <p>Paste a product listing or search URL — Amazon phones, eBay, books, and more.</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="panel form-panel">
+        <form id="scrape-form" class="scrape-form">
+          <label class="field">
+            <span>Website URL</span>
+            <input
+              type="url"
+              id="url"
+              name="url"
+              placeholder="https://www.amazon.com/s?k=phones"
+              required
+            >
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Site preset</span>
+              <select id="preset" name="preset">
+                <option value="auto">Auto-detect</option>
+                {% for name in presets %}
+                <option value="{{ name }}">{{ name }}</option>
+                {% endfor %}
+                <option value="generic">generic</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Max pages</span>
+              <input type="number" id="max_pages" name="max_pages" min="1" max="10" value="1">
+            </label>
+          </div>
+
+          <label class="checkbox">
+            <input type="checkbox" id="stealth" name="stealth">
+            <span>Use stealth browser (required for Amazon, eBay)</span>
+          </label>
+
+          <div class="actions">
+            <button type="submit" id="submit-btn">Scrape</button>
+            <button type="button" id="download-json-btn" class="secondary" hidden>Download JSON</button>
+            <button type="button" id="download-excel-btn" class="secondary" hidden>Download Excel</button>
+          </div>
+        </form>
+
+        <div id="status" class="status" hidden></div>
+      </section>
+
+      <section class="results-section" id="results-section" hidden>
+        <div class="results-header">
+          <h2 id="results-title">Results</h2>
+          <p id="results-meta"></p>
+        </div>
+        <div id="results-grid" class="results-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById("scrape-form");
+    const statusEl = document.getElementById("status");
+    const resultsSection = document.getElementById("results-section");
+    const resultsGrid = document.getElementById("results-grid");
+    const resultsTitle = document.getElementById("results-title");
+    const resultsMeta = document.getElementById("results-meta");
+    const submitBtn = document.getElementById("submit-btn");
+    const downloadJsonBtn = document.getElementById("download-json-btn");
+    const downloadExcelBtn = document.getElementById("download-excel-btn");
+
+    let lastPayload = null;
+
+    function setStatus(message, type = "info") {
+      statusEl.hidden = false;
+      statusEl.className = `status status-${type}`;
+      statusEl.textContent = message;
+    }
+
+    function clearStatus() {
+      statusEl.hidden = true;
+      statusEl.textContent = "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function renderItems(items) {
+      if (!items.length) {
+        resultsGrid.innerHTML = `<p class="empty">No items found. Try enabling stealth mode or a different URL.</p>`;
+        return;
+      }
+
+      resultsGrid.innerHTML = items.map((item) => {
+        const title = escapeHtml(item.title || "Untitled");
+        const price = escapeHtml(item.price || "—");
+        const rating = escapeHtml(item.rating || "");
+        const availability = escapeHtml(item.availability || "");
+        const image = item.image_url ? escapeHtml(item.image_url) : "";
+        const link = item.product_url ? escapeHtml(item.product_url) : "";
+
+        const meta = [rating, availability].filter(Boolean).join(" · ");
+
+        return `
+          <article class="card">
+            ${image ? `<img class="card-image" src="${image}" alt="" loading="lazy">` : `<div class="card-image placeholder">No image</div>`}
+            <div class="card-body">
+              <h3 class="card-title">${link ? `<a href="${link}" target="_blank" rel="noopener">${title}</a>` : title}</h3>
+              <p class="card-price">${price}</p>
+              ${meta ? `<p class="card-meta">${meta}</p>` : ""}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearStatus();
+      resultsSection.hidden = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Scraping…";
+      downloadJsonBtn.hidden = true;
+      downloadExcelBtn.hidden = true;
+      lastPayload = null;
+
+      const payload = {
+        url: document.getElementById("url").value.trim(),
+        preset: document.getElementById("preset").value,
+        max_pages: document.getElementById("max_pages").value,
+        stealth: document.getElementById("stealth").checked,
+      };
+
+      setStatus("Fetching page and extracting items. This may take up to a minute for Amazon/eBay.", "loading");
+
+      try {
+        const response = await fetch("/api/scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Scrape failed.");
+        }
+
+        lastPayload = data;
+        resultsTitle.textContent = `${data.count} item${data.count === 1 ? "" : "s"} found`;
+        resultsMeta.textContent = `Preset: ${data.preset} · ${data.pages_scraped} page(s) scraped · ${data.url}`;
+        renderItems(data.items);
+        resultsSection.hidden = false;
+        downloadJsonBtn.hidden = false;
+        downloadExcelBtn.hidden = false;
+        clearStatus();
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Scrape";
+      }
+    });
+
+    downloadJsonBtn.addEventListener("click", () => {
+      if (!lastPayload) return;
+      const blob = new Blob([JSON.stringify(lastPayload.items, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "scrape_results.json";
+      anchor.click();
+      URL.revokeObjectURL(url);
+    });
+
+    downloadExcelBtn.addEventListener("click", async () => {
+      if (!lastPayload) return;
+
+      downloadExcelBtn.disabled = true;
+      downloadExcelBtn.textContent = "Preparing…";
+
+      try {
+        const response = await fetch("/api/export/excel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: lastPayload.items }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Excel export failed.");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "scrape_results.xlsx";
+        anchor.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        downloadExcelBtn.disabled = false;
+        downloadExcelBtn.textContent = "Download Excel";
+      }
+    });
+  </script>
+</body>
+</html>
