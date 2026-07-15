@@ -1,0 +1,209 @@
+{
+  "overview": {
+    "shape": [
+      7787,
+      16
+    ],
+    "columns": [
+      "show_id",
+      "type",
+      "title",
+      "director",
+      "cast",
+      "country",
+      "date_added",
+      "release_year",
+      "rating",
+      "duration",
+      "listed_in",
+      "description",
+      "duration_value",
+      "duration_unit",
+      "primary_country",
+      "primary_genre"
+    ],
+    "dtypes": {
+      "show_id": "str",
+      "type": "str",
+      "title": "str",
+      "director": "str",
+      "cast": "str",
+      "country": "str",
+      "date_added": "datetime64[us]",
+      "release_year": "int64",
+      "rating": "str",
+      "duration": "str",
+      "listed_in": "str",
+      "description": "str",
+      "duration_value": "float64",
+      "duration_unit": "str",
+      "primary_country": "object",
+      "primary_genre": "object"
+    },
+    "numeric_columns": [
+      "release_year",
+      "duration_value"
+    ],
+    "categorical_columns": [
+      "show_id",
+      "type",
+      "title",
+      "director",
+      "cast",
+      "country",
+      "rating",
+      "duration",
+      "listed_in",
+      "description",
+      "duration_unit",
+      "primary_country",
+      "primary_genre"
+    ],
+    "datetime_columns": [
+      "date_added"
+    ],
+    "missing_values": {
+      "show_id": 0,
+      "type": 0,
+      "title": 0,
+      "director": 2389,
+      "cast": 718,
+      "country": 507,
+      "date_added": 98,
+      "release_year": 0,
+      "rating": 7,
+      "duration": 0,
+      "listed_in": 0,
+      "description": 0,
+      "duration_value": 0,
+      "duration_unit": 0,
+      "primary_country": 507,
+      "primary_genre": 0
+    },
+    "missing_pct": {
+      "show_id": 0.0,
+      "type": 0.0,
+      "title": 0.0,
+      "director": 30.68,
+      "cast": 9.22,
+      "country": 6.51,
+      "date_added": 1.26,
+      "release_year": 0.0,
+      "rating": 0.09,
+      "duration": 0.0,
+      "listed_in": 0.0,
+      "description": 0.0,
+      "duration_value": 0.0,
+      "duration_unit": 0.0,
+      "primary_country": 6.51,
+      "primary_genre": 0.0
+    },
+    "duplicate_rows": 0,
+    "memory_mb": 7.98
+  },
+  "numeric_summary": {
+    "count": {
+      "release_year": 7787.0,
+      "duration_value": 7787.0
+    },
+    "mean": {
+      "release_year": 2013.93,
+      "duration_value": 69.12
+    },
+    "std": {
+      "release_year": 8.76,
+      "duration_value": 50.95
+    },
+    "min": {
+      "release_year": 1925.0,
+      "duration_value": 1.0
+    },
+    "25%": {
+      "release_year": 2013.0,
+      "duration_value": 2.0
+    },
+    "50%": {
+      "release_year": 2017.0,
+      "duration_value": 88.0
+    },
+    "75%": {
+      "release_year": 2018.0,
+      "duration_value": 106.0
+    },
+    "max": {
+      "release_year": 2021.0,
+      "duration_value": 312.0
+    }
+  },
+  "outlier_summary": [
+    {
+      "column": "release_year",
+      "outlier_count": 745,
+      "outlier_pct": 9.57
+    },
+    {
+      "column": "duration_value",
+      "outlier_count": 1,
+      "outlier_pct": 0.01
+    }
+  ],
+  "correlation": {
+    "release_year": {
+      "release_year": 1.0,
+      "duration_value": -0.241
+    },
+    "duration_value": {
+      "release_year": -0.241,
+      "duration_value": 1.0
+    }
+  },
+  "top_countries": {
+    "United States": 3297,
+    "India": 990,
+    "United Kingdom": 723,
+    "Canada": 412,
+    "France": 349,
+    "Japan": 287,
+    "Spain": 215,
+    "South Korea": 212,
+    "Germany": 199,
+    "Mexico": 154
+  },
+  "top_genres": {
+    "International Movies": 2437,
+    "Dramas": 2106,
+    "Comedies": 1471,
+    "International TV Shows": 1199,
+    "Documentaries": 786,
+    "Action & Adventure": 721,
+    "TV Dramas": 704,
+    "Independent Movies": 673,
+    "Children & Family Movies": 532,
+    "Romantic Movies": 531,
+    "TV Comedies": 525,
+    "Thrillers": 491,
+    "Crime TV Shows": 427,
+    "Kids' TV": 414,
+    "Docuseries": 353
+  },
+  "duration_summary": [
+    {
+      "type": "Movie",
+      "unit": "minutes",
+      "count": 5377,
+      "mean": 99.3,
+      "median": 98.0,
+      "min": 3.0,
+      "max": 312.0
+    },
+    {
+      "type": "TV Show",
+      "unit": "seasons",
+      "count": 2410,
+      "mean": 1.8,
+      "median": 1.0,
+      "min": 1.0,
+      "max": 16.0
+    }
+  ]
+}
